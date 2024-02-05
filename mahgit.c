@@ -622,7 +622,7 @@ void removeLinehook(FILE *file, const char *lineToRemove)
         return;
     }
     char buffer[1000];
-
+    printf("%s\n",lineToRemove);
     while (fgets(buffer, sizeof(buffer), file))
     {
         buffer[strlen(buffer) - 1] = '\0';
@@ -638,7 +638,7 @@ void removeLinehook(FILE *file, const char *lineToRemove)
     fclose(file);
     fclose(tempFile);
 
-    remove("staging.txt");
+    remove("hooks.txt");
     rename("temp.txt", "hooks.txt");
 
     printf("Line removed and file updated successfully.\n");
@@ -1253,7 +1253,7 @@ int commitkon(int argc, char *const argv[])
         getcwd(cwd, sizeof(cwd));
         int flag = 0;
         chdir(temppath);
-        FILE *shortcut = fopen("shortcut.txt", "r");
+        FILE *shortcut = fopen("shortcut.txt", "w");
         char line[100];
         sprintf(line, "%s:%s", argv[5], argv[3]);
         replaceLineWithArray(shortcut, argv[5], line, 0);
@@ -1286,6 +1286,7 @@ int commitkon(int argc, char *const argv[])
                 for (int i = mahal; i < strlen(line) - 1; i++)
                 {
                     message[index] = line[i];
+                    index++;
                 }
                 flag2 = 1;
                 break;
@@ -1767,7 +1768,7 @@ void searchDirectoriesForConfigFile(char targetDate[])
 
                     SYSTEMTIME targetDateSt;
                     sscanf(targetDate, "%d-%d-%d", &targetDateSt.wYear, &targetDateSt.wMonth, &targetDateSt.wDay);
-                    printf("%d-%d-%d\n", targetDateSt.wYear, targetDateSt.wMonth, targetDateSt.wDay);
+                    
                     FILETIME targetDateFt;
                     SystemTimeToFileTime(&targetDateSt, &targetDateFt);
 
@@ -2693,13 +2694,13 @@ int precommit(int argc, char *const argv[])
     else if (strcmp(argv[2], "add") == 0)
     {
         FILE *hooks = fopen("hooks.txt", "a");
-        fprintf(hooks, "%s\n", argv[3]);
+        fprintf(hooks, "%s\n", argv[4]);
         fclose(hooks);
     }
     else if (strcmp(argv[2], "remove") == 0)
     {
         FILE *hooks = fopen("hooks.txt", "r+");
-        removeLinehook(hooks, argv[3]);
+        removeLinehook(hooks, argv[4]);
         fclose(hooks);
     }
     else if (strcmp(argv[2], "-f") == 0)
