@@ -622,7 +622,7 @@ void removeLinehook(FILE *file, const char *lineToRemove)
         return;
     }
     char buffer[1000];
-    printf("%s\n",lineToRemove);
+    printf("%s\n", lineToRemove);
     while (fgets(buffer, sizeof(buffer), file))
     {
         buffer[strlen(buffer) - 1] = '\0';
@@ -726,6 +726,7 @@ void reset(int argc, char *const argv[])
                     }
                     templine++;
                 }
+                deleteFile(filepath);
             }
             chdir(cwd);
         }
@@ -933,7 +934,8 @@ void compareFileModificationTimes(const char *file1, const char *file2, FILE *fi
         char line[100];
         fgets(line, sizeof(line), fp);
         printf("%s was modified later than %s\n", file1, file2);
-        fprintf(file, "%s\n", line);
+        fprintf(file, "Author : %s\n", line);
+        fprintf(file, "Message : ");
         for (int i = 3; i < argc; i++)
         {
             fprintf(file, "%s ", argv[i]);
@@ -961,7 +963,8 @@ void compareFileModificationTimes(const char *file1, const char *file2, FILE *fi
         char line[100];
         fgets(line, sizeof(line), fp);
         printf("%s was modified later than %s\n", file2, file1);
-        fprintf(file, "%s\n", line);
+        fprintf(file, "Author : %s\n", line);
+        fprintf(file, "Message : ");
         for (int i = 3; i < argc; i++)
         {
             fprintf(file, "%s ", argv[i]);
@@ -1355,7 +1358,7 @@ int commitkon(int argc, char *const argv[])
             }
             char line[100];
             fgets(line, sizeof(line), fp);
-            fprintf(branch, "%s", line);
+            fprintf(branch, "Author : %s", line);
             fprintf(file, "%s ", message);
 
             fprintf(branch, "\n");
@@ -1768,7 +1771,7 @@ void searchDirectoriesForConfigFile(char targetDate[])
 
                     SYSTEMTIME targetDateSt;
                     sscanf(targetDate, "%d-%d-%d", &targetDateSt.wYear, &targetDateSt.wMonth, &targetDateSt.wDay);
-                    
+
                     FILETIME targetDateFt;
                     SystemTimeToFileTime(&targetDateSt, &targetDateFt);
 
@@ -2776,6 +2779,831 @@ int precommit(int argc, char *const argv[])
         }
     }
 }
+int compareWords(const void *a, const void *b)
+{
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+void printSortedWords(FILE *file)
+{
+    char line[100]; // Assuming maximum line length is 100
+    while (fgets(line, sizeof(line), file))
+    {
+        char *word = strtok(line, " "); // Extract the first word from the line
+        char *words[100];               // Assuming maximum words per line is 100
+        int count = 0;
+        while (word != NULL)
+        {
+            words[count++] = word;    // Store the word
+            word = strtok(NULL, " "); // Get the next word
+        }
+        qsort(words, count, sizeof(char *), compareWords); // Sort the words in ascending order
+
+        for (int i = 0; i < count; i++)
+        {
+            printf("%s\n", words[i]); // Print the sorted words
+        }
+    }
+}
+int tag(int argc, char *const argv[])
+{
+    if (argc == 2)
+    {
+        findmah();
+        chdir(temppath);
+        FILE *tagha = fopen("tagha.txt", "r");
+        printSortedWords(tagha);
+        fclose(tagha);
+    }
+    if (argc == 4 && strcmp(argv[2], "-a") != 0)
+    {
+        findmah();
+        chdir(temppath);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        FILE *file = fopen(tagname, "r");
+        char line[100];
+        while (fgets(line, 100, file) != NULL)
+        {
+            printf("%s", line);
+        }
+    }
+    if (argc == 4 && strcmp(argv[2], "-a") == 0)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    return 0;
+                }
+            }
+        }
+        fclose(tagha);
+        fprintf(tagha, "%s\n", argv[3]);
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            /*for (int i = 3; i < argc; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", tempcommit);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            /*for (int i = 3; i < argc; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", tempcommit);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+    if (argc == 5)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    flag2 = 1;
+                    break;
+                }
+            }
+        }
+        if (flag2 == 0)
+        {
+            fprintf(tagha, "%s\n", argv[3]);
+        }
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            /*for (int i = 3; i < argc; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", tempcommit);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            /*for (int i = 3; i < argc; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", tempcommit);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+    if (strcmp(argv[argc - 1], "-f") == 0 && strcmp(argv[4], "-m") == 0)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    flag2 = 1;
+                    break;
+                }
+            }
+        }
+        if (flag2 == 0)
+        {
+            fprintf(tagha, "%s\n", argv[3]);
+        }
+        fclose(tagha);
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            for (int i = 5; i < argc; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            fprintf(file, "\n");
+            fprintf(file, "%s\n", tempcommit);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            for (int i = 5; i < argc; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", tempcommit);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+    if (argc == 6 && strcmp(argv[4], "-c") == 0)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    return 0;
+                }
+            }
+        }
+        fprintf(tagha, "%s\n", argv[3]);
+        fclose(tagha);
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            /*for (int i = 5; i < argc - 1; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[5]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            /*for (int i = 5; i < argc - 1; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[5]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+    if (strcmp(argv[argc - 1], "-f") == 0 && strcmp(argv[4], "-m") == 0)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    flag2 = 1;
+                    break;
+                }
+            }
+        }
+        if (flag2 == 0)
+        {
+            fprintf(tagha, "%s\n", argv[3]);
+        }
+        fclose(tagha);
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            for (int i = 5; i < argc - 1; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[5]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            for (int i = 5; i < argc - 1; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            fprintf(file, "\n");
+            fprintf(file, "%s\n", tempcommit);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+    if (strcmp(argv[argc - 1], "-f") == 0 && strcmp(argv[4], "-c") == 0)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    flag2 = 1;
+                    break;
+                }
+            }
+        }
+        if (flag2 == 0)
+        {
+            fprintf(tagha, "%s\n", argv[3]);
+        }
+        fclose(tagha);
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            /*for (int i = 5; i < argc - 1; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[5]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            /*for (int i = 5; i < argc - 1; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }*/
+            // fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[5]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+    if (strcmp(argv[argc - 2], "-c") == 0 && strcmp(argv[4], "-m") == 0)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    return 1;
+                }
+            }
+        }
+        if (flag2 == 0)
+        {
+            fprintf(tagha, "%s\n", argv[3]);
+        }
+        fclose(tagha);
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            for (int i = 5; i < argc - 2; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[argc - 1]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            for (int i = 5; i < argc - 2; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[argc - 1]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+    if (strcmp(argv[argc - 3], "-c") == 0 && strcmp(argv[4], "-m") == 0 && strcmp(argv[argc - 1], "-f") == 0)
+    {
+        findmah();
+        chdir(temppath);
+        if (_access("tags", 0) == -1)
+        {
+            // Create new directory
+            int result = _mkdir("tags");
+        }
+        char tempcommit[100];
+        FILE *lastcommit = fopen("lastcommit.txt", "r");
+        fgets(tempcommit, 100, lastcommit);
+        fclose(lastcommit);
+        int flag = 0;
+        FILE *tagha = fopen("tagha.txt", "r");
+        int flag2 = 0;
+        if (tagha != NULL)
+        {
+            char line[100];
+            while (fgets(line, 100, tagha) != NULL)
+            {
+                line[strlen(line) - 1] = '\0';
+                if (strcmp(line, argv[3]) == 0)
+                {
+                    printf("tag exists\n");
+                    flag2 = 1;
+                    break;
+                }
+            }
+        }
+        if (flag2 == 0)
+        {
+            fprintf(tagha, "%s\n", argv[3]);
+        }
+        fclose(tagha);
+        FILE *branch = fopen("username.txt", "r");
+        if (branch != NULL)
+        {
+            flag = 0;
+        }
+        char name[100];
+        if (flag == 1)
+        {
+            fgets(name, 100, branch);
+        }
+        fclose(branch);
+        chdir("tags");
+        char tagname[100];
+        sprintf(tagname, "%s.txt", argv[3]);
+        const char *file2 = "c:\\Users\\ASuS\\Desktop\\project\\globalname.txt";
+        FILE *file = fopen(tagname, "w");
+        if (flag == 0)
+        {
+            printf("using global username\n");
+            FILE *fp = fopen(file2, "r");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "Error: Failed to open %s\n", file2);
+            }
+            char line[100];
+            fgets(line, sizeof(line), fp);
+            fprintf(file, "%s", line);
+            for (int i = 5; i < argc - 3; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[argc - 2]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        if (flag == 1)
+        {
+
+            fprintf(file, "%s\n", name);
+            for (int i = 5; i < argc - 3; i++)
+            {
+                fprintf(file, "%s ", argv[i]);
+            }
+            fprintf(file, "\n");
+            fprintf(file, "%s\n", argv[argc - 2]);
+            time_t currentTime;
+            time(&currentTime);
+
+            // Convert the time to a string
+            char *timeString = ctime(&currentTime);
+
+            // Write the time to the file
+            fprintf(file, "%s\n", timeString);
+        }
+        fclose(branch);
+    }
+}
 int main(int argc, char *const argv[])
 {
 
@@ -2823,6 +3651,10 @@ int main(int argc, char *const argv[])
     if (strcmp(argv[1], "pre-commit") == 0)
     {
         precommit(argc, argv);
+    }
+    if (strcmp(argv[1], "tag") == 0)
+    {
+        tag(argc, argv);
     }
 
     return 0;
