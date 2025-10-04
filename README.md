@@ -1,79 +1,65 @@
 # mahgit
-mahgit is a Git-like version control system written in pure C as part of a programming project by Mahbod Khaleti. It is designed to help users initialize repositories, stage changes, commit files, and manage project history, all within a command-line interface inspired by core Git functionality.
 
-About the Project
-This project was developed entirely in C to both deepen my understanding of version control logic and demonstrate proficiency with low-level system operations such as file, directory, and attribute management. I aimed to recreate the essential version control workflow, focusing on usability and core principles found in mainstream tools like Git while showcasing careful OS-level handling.
+**mahgit** is a Git-like version control system written in pure C as part of a programming project by Mahbod Khaleti. It allows users to initialize repositories, stage changes, commit files, and manage simple project history from the command line, mimicking core Git functionality.
 
-Features
-Repository Initialization:
-Initialize a new .mahgit repository directory structure in your working directory using an init command.
+## About the Project
 
-Staging Area:
-Add files or directories to the staging area using add. Handles both files and directories recursively.
+This project was developed entirely in C to strengthen my understanding of version control concepts and demonstrate proficiency with low-level system operations such as file, directory, and attribute management. The goal was to recreate the essential workflow of version control with a focus on usability and the key features found in mainstream tools, while working close to the OS level.
 
-Commit System:
-Save staged changes using commit, writing essential commit history with author and message.
+## Features
 
-Branch Management:
-Support for simple branching (master branch default, additional files for managing other branches).
+- **Repository Initialization**
+  - Initialize a new `.mahgit` repository in your working directory (`init` command).
+- **Staging Area**
+  - Add files or directories to the staging area via `add`. Supports recursive directory addition.
+- **Commit System**
+  - Commit staged changes with author and message tracking (`commit`).
+- **Branch Management**
+  - Simple branch management. Defaults to `master`; additional branches can be managed via files.
+- **Config User Info**
+  - Set username/email locally or globally for commit attribution.
+- **File Reset/Remove**
+  - Remove messages from staging or revert recent actions on files and directories.
+- **Tree View**
+  - Print directory structure up to a specified depth with `-n` option.
+- **Cross-Platform Windows Support**
+  - Leverages Windows API for attribute/hidden files and system commands like `xcopy`.
+- **Basic Hash Functionality**
+  - Simple hashing is included for core operations.
+- **Error Handling**
+  - Detailed messages inform the user during each step.
+- **English and Persian Output**
+  - Output messages are available in both English and Persian.
 
-Config User Info:
-Configure local or global username and email to associate authorship with commits.
+## How It Works
 
-File Reset/Remove:
-Remove messages from the staging or undo recent actions for files and directories.
+- Single-file C source: `mahgit.c`
+- Direct file and folder manipulation using OS/system calls
+- Repository data stored in hidden `.mahgit` directory
+- Command-line arguments handle all actions and features
+- Focused on Windows OS APIs and utilities
 
-Tree View:
-Print structured directory trees up to a specified depth with the -n option.
+## Getting Started
 
-Cross-Platform Windows Support:
-Utilizes Windows API for directory attributes, hidden files, and command-line operations (xcopy, etc).
+1. **Clone the repository:**
+   git clone https://github.com/mahbodkhaleti/mahgit.git
+2. **Compile the source:**
+   gcc mahgit.c -o mahgit
+3. **Run and use commands:**
+   ./mahgit init
+   ./mahgit add -f yourfile.c
+   ./mahgit commit -m "Initial commit"
+*(See source code for detailed command usage.)*
 
-Basic Hash Functionality:
-Includes simple hashing for some operations.
+## Limitations and Future Work
 
-Error Handling and Messaging:
-Comprehensive standard output to inform users during each step or on errors.
+- Supports Windows OS only (uses Windows-specific APIs and commands)
+- Does not include advanced Git features (merge, remote repositories)
+- Intended for educational/demo purposes—core C implementation of basic VCS logic
 
-English and Persian Output:
-Some output messages are in Persian for user-friendliness, reflecting my background and target audience.
+## Author
 
-How It Works
-The code is contained in a single C file: mahgit.c
+**Mahbod Khaleti**  
+Student & Developer  
+*Fop Project Assignment*
 
-Relies on direct interaction with the OS (file/directory manipulation, attribute management)
-
-Stores repository data in a hidden .mahgit folder with structured subfolders for tracking changes
-
-Commands are processed via command line with arguments checked for validity
-
-Uses Windows-specific system calls and commands
-
-Getting Started
-Clone the repository:
-
-text
-git clone https://github.com/mahbodkhaleti/mahgit.git
-Compile the source:
-
-text
-gcc mahgit.c -o mahgit
-Run and use commands:
-
-text
-./mahgit init
-./mahgit add -f yourfile.c
-./mahgit commit -m "Initial commit"
-(see code for more command details)
-
-Limitations and Future Plans
-Currently supports Windows OS only (due to API and command usage)
-
-Lacks advanced Git features (merging, remote operations, etc.)
-
-Project is for educational purposes and demonstration of core VCS logic in C
-
-Author
-Mahbod Khaleti
-Student & Developer
-Fop Project Assignment
